@@ -3,6 +3,7 @@
 #include "framework.h"
 
 #include <conditions.h>
+#include <algorithm>
 
 namespace scheduling {
 
@@ -12,7 +13,8 @@ Any<Begin, End>::Any() : _current(Begin) {}
 
 template <Unit Begin, Unit End>
 void Any<Begin, End>::init(const Unit current) {
-  _current = current;
+  // NB: exctra check. We could assume current >= Begin
+  _current = std::max(current, Begin);
 }
 
 template <Unit Begin, Unit End>
@@ -50,7 +52,7 @@ Const& Const::operator++() {
 // Range
 Range::Range(const Unit from, const Unit to)
     : _to(to), _from(from), _current(from) {}
-void Range::init(const Unit current) { _current = current; }
+void Range::init(const Unit current) { _current = std::max(current, _from); }
 void Range::reset() { _current = _from; }
 Range::operator bool() const { return _current <= _to; }
 Unit Range::operator*() const { return _current; }

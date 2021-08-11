@@ -13,18 +13,22 @@ typedef std::vector<scheduling::Unit> Units;
 
 	TEST_CLASS(TestConditions)
 	{
+    static void FillResults(Units& units, scheduling::ICondition& condition) {
+      units.clear();
+      while (condition) {
+        units.push_back(*condition);
+        ++condition;
+      }
+    }
 	public:
 		
 		TEST_METHOD(TestYears)
 		{
 			Units units;
-			scheduling::AnyYear ay;
+			scheduling::AnyYear condition;
 
-			ay.init(2020);
-      while (ay) {
-        units.push_back(*ay);
-        ++ay;
-			}
+			condition.init(2020);
+      FillResults(units, condition);
 
 			Units expected;
       for (int i = 2020; i <= 2100; ++i) {
@@ -36,14 +40,10 @@ typedef std::vector<scheduling::Unit> Units;
 
     TEST_METHOD(TestStepDays) {
       Units units;
-      scheduling::AnyStepDay ay(3);
+      scheduling::AnyStepDay condition(3);
 
-      ay.init(14);
-
-      while (ay) {
-        units.push_back(*ay);
-        ++ay;
-      }
+      condition.init(14);
+      FillResults(units, condition);
 
       Units expected{16, 19, 22, 25, 28, 31};
       Assert::IsTrue(units == expected);
@@ -51,16 +51,23 @@ typedef std::vector<scheduling::Unit> Units;
 
     TEST_METHOD(TestRangeStep) {
       Units units;
-      scheduling::RangeStep ay(5, 1, 18);
+      scheduling::RangeStep condition(5, 1, 18);
 
-      ay.init(3);
-
-      while (ay) {
-        units.push_back(*ay);
-        ++ay;
-      }
+      condition.init(3);
+      FillResults(units, condition);
 
       Units expected{6, 11, 16};
+      Assert::IsTrue(units == expected);
+    }
+
+    TEST_METHOD(TestRangeSmallInit) {
+      Units units;
+      scheduling::Range condition(14, 18);
+
+      condition.init(3);
+      FillResults(units, condition);
+
+      Units expected{14, 15, 16, 17, 18};
       Assert::IsTrue(units == expected);
     }
 	};
