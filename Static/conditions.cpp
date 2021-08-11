@@ -1,4 +1,8 @@
-#include "conditions.h"
+
+#include "pch.h"
+#include "framework.h"
+
+#include <conditions.h>
 
 namespace scheduling {
 
@@ -59,11 +63,27 @@ Range& Range::operator++() {
 template <Unit Begin, Unit End>
 AnyStep<Begin, End>::AnyStep(Unit step) : _step(step) {}
 
+// todo: copypast with Range
+template <Unit Begin, Unit End>
+void AnyStep<Begin, End>::init(const Unit current) {
+  if (current <= Begin) {
+    Any<Begin, End>::_current = Begin;
+    return;
+  }
+  Any<Begin, End>::_current = current;
+
+  auto diffmod = (current - Begin) % _step;
+  if (diffmod != 0) {
+    Any<Begin, End>::_current += _step - diffmod;
+  }
+}
+
 template <Unit Begin, Unit End>
 AnyStep<Begin, End>& AnyStep<Begin, End>::operator++() {
   Any<Begin, End>::_current += _step;
   return *this;
 }
+
 
 // RangeStep
 RangeStep::RangeStep(const Unit step, const Unit from, const Unit to)

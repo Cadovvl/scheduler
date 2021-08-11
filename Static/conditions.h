@@ -30,7 +30,7 @@ class Any : public ICondition {
   Any();
 
   /*overrides*/
-  void init(const Unit current) override final;
+  void init(const Unit current) override;
   void reset() override final;
   operator bool() const override final;
   Unit operator*() const override final;
@@ -44,6 +44,7 @@ class Const final : public ICondition {
  public:
   explicit Const(const Unit val);
 
+  /*overrides*/
   void init(const Unit current) override final;
   void reset() override final;
   operator bool() const override final;
@@ -63,6 +64,7 @@ class Range : public ICondition {
  public:
   Range(const Unit from, const Unit to);
 
+  /*overrides*/
   void init(const Unit current) override;
   void reset() override final;
   operator bool() const override final;
@@ -76,6 +78,9 @@ class AnyStep final : public Any<Begin, End> {
 
  public:
   explicit AnyStep(Unit step);
+
+  /*overrides*/
+  void init(const Unit current) override final;
   AnyStep& operator++() override final;
 };
 
@@ -85,6 +90,7 @@ class RangeStep final : public Range {
  public:
   explicit RangeStep(const Unit step, const Unit from, const Unit to);
 
+  /*overrides*/
   void init(const Unit current) override final;
   RangeStep& operator++() override final;
 };
