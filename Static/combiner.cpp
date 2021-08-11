@@ -42,7 +42,7 @@ Combiner::operator bool() const { return _heapEnd != _conditions.begin(); }
 
 Unit Combiner::operator*() const { return **_conditions.front(); }
 
-ICondition& Combiner::operator++() {
+Combiner& Combiner::operator++() {
   Unit val = **_conditions.front();
   while (_conditions.begin() != _heapEnd && val == **_conditions.front()) {
     std::pop_heap(_conditions.begin(), _heapEnd, heap_cmp);

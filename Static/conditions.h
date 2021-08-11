@@ -5,7 +5,7 @@ namespace scheduling {
 
 using Unit = int16_t;
 
-class ICondition {
+class ISequence {
  public:
   // Setup condition with current value
   virtual void init(const Unit current) = 0;
@@ -16,11 +16,11 @@ class ICondition {
   // returns next available value
   virtual Unit operator*() const = 0;
   // iterates to the next iterator
-  virtual ICondition& operator++() = 0;
+  virtual ISequence& operator++() = 0;
 };
 
 template <Unit Begin, Unit End>
-class Any : public ICondition {
+class Any : public ISequence {
   typedef Any<Begin, End> self_t;
 
  protected:
@@ -37,7 +37,7 @@ class Any : public ICondition {
   self_t& operator++() override;
 };
 
-class Const final : public ICondition {
+class Const final : public ISequence {
   const Unit _val;
   bool _active;
 
@@ -52,7 +52,7 @@ class Const final : public ICondition {
   Const& operator++() override final;
 };
 
-class Range : public ICondition {
+class Range : public ISequence {
   const Unit _to;
 
  protected:
@@ -116,3 +116,4 @@ using AnyStepMillisecond = AnyStep<0, 999>;
 
 
 }  // namespace scheduling
+

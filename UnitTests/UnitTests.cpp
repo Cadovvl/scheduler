@@ -13,7 +13,7 @@ typedef std::vector<scheduling::Unit> Units;
 
 	TEST_CLASS(TestConditions)
 	{
-    static void FillResults(Units& units, scheduling::ICondition& condition) {
+    static void FillResults(Units& units, scheduling::ISequence& condition) {
       units.clear();
       while (condition) {
         units.push_back(*condition);

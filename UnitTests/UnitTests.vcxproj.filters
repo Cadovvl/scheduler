@@ -24,6 +24,9 @@
     <ClCompile Include="TestCombiner.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="TestIterator.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="pch.h">

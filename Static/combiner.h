@@ -7,8 +7,8 @@
 
 namespace scheduling {
 
-class Combiner final : public ICondition {
-  typedef std::unique_ptr<ICondition> condition_ptr;
+class Combiner final : public ISequence {
+  typedef std::unique_ptr<ISequence> condition_ptr;
   typedef std::vector<condition_ptr> Conditions;
 
 
@@ -29,7 +29,7 @@ class Combiner final : public ICondition {
   virtual void reset() override;
   virtual operator bool() const override;
   virtual Unit operator*() const override;
-  virtual ICondition& operator++() override;
+  virtual Combiner& operator++() override;
 };
 
 }  // namespace scheduling
