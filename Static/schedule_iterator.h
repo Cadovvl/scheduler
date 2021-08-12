@@ -55,7 +55,10 @@ class Iter {
   Combiner secondsSequence;
   Combiner millisecondsSequence;
 
+  bool lastMonth = false;
+
   // init with current date
+  // Sets the first valid date
   void init(const DateTime& current);
   // returns false if there is no next value
   operator bool() const;

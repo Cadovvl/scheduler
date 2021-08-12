@@ -29,14 +29,70 @@ void Iter::init(const DateTime& current) {
   //     and std::chrono::hh_mm_ss
   // But VS does not support C++20 yet
 
-  yearsSequence.init(current.date.years);
-  monthsSequence.init(current.date.months);
-  daysSequence.init(current.date.days);
 
-  hoursSequence.init(current.time.hours);
-  minutesSequence.init(current.time.minutes);
-  secondsSequence.init(current.time.seconds);
-  millisecondsSequence.init(current.time.milliseconds);
+  // reset all
+  for (auto* s : std::vector<Combiner*>{
+           &millisecondsSequence,
+           &secondsSequence,
+           &minutesSequence,
+           &hoursSequence,
+           &daysSequence,
+           &monthsSequence,
+           &yearsSequence,
+       }) {
+    s->reset();
+  }
+
+  // NB: init block 
+  {
+    yearsSequence.init(current.date.years);
+    if (!yearsSequence) goto end_init_block;
+    if (*yearsSequence != current.date.years) goto end_init_block;
+
+
+    for (auto [seq, val] : std::vector<std::pair<Combiner*, Unit>>{
+             {&monthsSequence, current.date.months},
+             {&daysSequence, current.date.days}}) {
+      seq->init(val);
+      if (!*seq) goto end_init_block;
+      if (**seq != val) goto end_init_block;
+    }
+
+    if (!is_valid_date()) goto end_init_block;
+
+    for (auto [seq, val] : std::vector<std::pair<Combiner*, Unit>>{
+             {&hoursSequence, current.time.hours},
+             {&minutesSequence, current.time.minutes},
+             {&secondsSequence, current.time.seconds},
+             {&millisecondsSequence, current.time.milliseconds}}) {
+      seq->init(val);
+      if (!*seq) goto end_init_block;
+      if (**seq != val) goto end_init_block;
+    }
+  }
+  end_init_block:
+
+
+  // Fix combiners without valid value (max one at a time)
+  for (auto [seq, prev] : std::vector<std::pair<Combiner*, Combiner*>>{
+           {&millisecondsSequence, &secondsSequence},
+           {&secondsSequence, &minutesSequence},
+           {&minutesSequence, &hoursSequence},
+           {&hoursSequence, &daysSequence},
+           {&daysSequence, &monthsSequence},
+           {&monthsSequence, &yearsSequence},
+       }) {
+    if (!*seq) {
+      seq->reset();
+      ++(*prev);
+    }
+  }
+  
+  // Increment until valid date
+  while (bool(*this) && !is_valid_date()) {
+    increment_date();
+  }
+
 }
 
 Iter::operator bool() const { return yearsSequence; }
@@ -83,8 +139,18 @@ bool Iter::increment_sector(const std::vector<Combiner*>& sector) {
 }
 
 bool Iter::is_valid_date() {
-  return boost::gregorian::gregorian_calendar::end_of_month_day(
-             *yearsSequence, *monthsSequence) >= *daysSequence;
+  auto end_of_month_day =
+      boost::gregorian::gregorian_calendar::end_of_month_day(*yearsSequence,
+                                                             *monthsSequence);
+  if (end_of_month_day < *daysSequence) {
+    return false;
+  }
+
+  if (lastMonth && (end_of_month_day != *daysSequence)) {
+    return false;
+  }
+
+  return true;
 }
 
 bool Iter::increment_time() {
@@ -97,11 +163,15 @@ bool Iter::increment_time() {
 }
 
 bool Iter::increment_date() {
-  return increment_sector(std::vector<Combiner*>{
+  if (increment_sector(std::vector<Combiner*>{
       &daysSequence,
-      &monthsSequence,
-      &yearsSequence,
-  });
+      &monthsSequence})) {
+    return true;
+  }
+
+  // Year sequence should not be reset;
+  ++yearsSequence;
+  return true;
 }
 
 

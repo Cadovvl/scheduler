@@ -34,16 +34,78 @@ TEST_CLASS(TestIterator) {
 
 
     Assert::IsTrue(*iter ==
+                   scheduling::DateTime{scheduling::Date{1, 9, 2010},
+                                        scheduling::Time{0, 0, 0, 10}});
+    ++iter;
+    Assert::IsTrue(*iter ==
+                   scheduling::DateTime{scheduling::Date{3, 9, 2010},
+                                        scheduling::Time{0, 0, 0, 10}});
+    ++iter;
+    Assert::IsTrue(*iter ==
+                   scheduling::DateTime{scheduling::Date{5, 9, 2010},
+                                        scheduling::Time{0, 0, 0, 10}});
+
+    
+    iter.init(scheduling::DateTime{scheduling::Date{28, 9, 2010},
+                                   scheduling::Time{0, 0, 0, 0}});
+
+    Assert::IsTrue(*iter ==
                    scheduling::DateTime{scheduling::Date{29, 9, 2010},
                                         scheduling::Time{0, 0, 0, 10}});
     ++iter;
     Assert::IsTrue(*iter ==
                    scheduling::DateTime{scheduling::Date{1, 9, 2011},
                                         scheduling::Time{0, 0, 0, 10}});
-    ++iter;
+  }
+
+  TEST_METHOD(TestInitIterator) {
+    // "*.9.*/2 10:00:00.000"
+    scheduling::Iter iter;
+    iter.yearsSequence.emplace(std::make_unique<scheduling::AnyYear>());
+    iter.monthsSequence.emplace(std::make_unique<scheduling::Const>(9));
+    iter.daysSequence.emplace(std::make_unique<scheduling::AnyStepDay>(2));
+
+    iter.hoursSequence.emplace(std::make_unique<scheduling::Const>(10));
+    iter.minutesSequence.emplace(std::make_unique<scheduling::Const>(0));
+    iter.secondsSequence.emplace(std::make_unique<scheduling::Const>(0));
+    iter.millisecondsSequence.emplace(std::make_unique<scheduling::Const>(0));
+
+    iter.init(scheduling::DateTime{scheduling::Date{28, 10, 2010},
+                                   scheduling::Time{0, 0, 0, 0}});
+
     Assert::IsTrue(*iter ==
-                   scheduling::DateTime{scheduling::Date{3, 9, 2011},
+                   scheduling::DateTime{scheduling::Date{1, 9, 2011},
                                         scheduling::Time{0, 0, 0, 10}});
+
+  }
+
+  
+  TEST_METHOD(TestInitIterator2) {
+    // "2010.5.5 10:01:01.001"
+    scheduling::Iter iter;
+    iter.yearsSequence.emplace(std::make_unique<scheduling::Const>(2010));
+    iter.monthsSequence.emplace(std::make_unique<scheduling::Const>(5));
+    iter.daysSequence.emplace(std::make_unique<scheduling::Const>(5));
+
+    iter.hoursSequence.emplace(std::make_unique<scheduling::Const>(10));
+    iter.minutesSequence.emplace(std::make_unique<scheduling::Const>(1));
+    iter.secondsSequence.emplace(std::make_unique<scheduling::Const>(1));
+    iter.millisecondsSequence.emplace(std::make_unique<scheduling::Const>(1));
+
+    iter.init(scheduling::DateTime{scheduling::Date{6, 6, 2011},
+                                   scheduling::Time{11, 2, 2, 2}});
+
+    Assert::IsFalse(iter);
+
+    iter.init(scheduling::DateTime{scheduling::Date{6, 6, 2009},
+                                   scheduling::Time{11, 2, 2, 2}});
+
+    
+    Assert::IsTrue(*iter ==
+                   scheduling::DateTime{scheduling::Date{5, 5, 2010},
+                                        scheduling::Time{1, 1, 1, 10}});
+    ++iter;
+    Assert::IsFalse(iter);
   }
 
   
@@ -203,7 +265,57 @@ TEST_CLASS(TestIterator) {
     Assert::IsTrue(*iter ==
                    scheduling::DateTime{scheduling::Date{30, 5, 2004},
                                         scheduling::Time{0, 0, 0, 10}});
+  }
+
+
+  TEST_METHOD(TestLastMonthDayIterator) {
+    // "*.*.32 10:00:00.000"
+    scheduling::Iter iter;
+    iter.yearsSequence.emplace(std::make_unique<scheduling::AnyYear>());
+    iter.monthsSequence.emplace(std::make_unique<scheduling::AnyMonth>());
+    iter.daysSequence.emplace(std::make_unique<scheduling::LastDay>());
+
+    iter.hoursSequence.emplace(std::make_unique<scheduling::Const>(10));
+    iter.minutesSequence.emplace(std::make_unique<scheduling::Const>(0));
+    iter.secondsSequence.emplace(std::make_unique<scheduling::Const>(0));
+    iter.millisecondsSequence.emplace(std::make_unique<scheduling::Const>(0));
+
+    iter.lastMonth = true;
+
+    iter.init(scheduling::DateTime{scheduling::Date{1, 1, 2010},
+                                   scheduling::Time{0, 0, 0, 0}});
+
+    Assert::IsTrue(*iter ==
+                   scheduling::DateTime{scheduling::Date{31, 1, 2010},
+                                        scheduling::Time{0, 0, 0, 10}});
     ++iter;
+    Assert::IsTrue(*iter ==
+                   scheduling::DateTime{scheduling::Date{28, 2, 2010},
+                                        scheduling::Time{0, 0, 0, 10}});
+    ++iter;
+    Assert::IsTrue(*iter ==
+                   scheduling::DateTime{scheduling::Date{31, 3, 2010},
+                                        scheduling::Time{0, 0, 0, 10}});
+    ++iter;
+    Assert::IsTrue(*iter ==
+                   scheduling::DateTime{scheduling::Date{30, 4, 2010},
+                                        scheduling::Time{0, 0, 0, 10}});
+    ++iter;
+    Assert::IsTrue(*iter ==
+                   scheduling::DateTime{scheduling::Date{31, 5, 2010},
+                                        scheduling::Time{0, 0, 0, 10}});
+    ++iter;
+    Assert::IsTrue(*iter ==
+                   scheduling::DateTime{scheduling::Date{30, 6, 2010},
+                                        scheduling::Time{0, 0, 0, 10}});
+    ++iter;
+    Assert::IsTrue(*iter ==
+                   scheduling::DateTime{scheduling::Date{31, 7, 2010},
+                                        scheduling::Time{0, 0, 0, 10}});
+    ++iter;
+    Assert::IsTrue(*iter ==
+                   scheduling::DateTime{scheduling::Date{31, 8, 2010},
+                                        scheduling::Time{0, 0, 0, 10}});
   }
 
  };

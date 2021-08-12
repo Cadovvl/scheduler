@@ -115,6 +115,7 @@ template class Any<0, 23>;
 template class Any<0, 59>;
 template class Any<0, 999>;
 
+template class Any<28, 31>;
 
 template class AnyStep<2000, 2100>;
 template class AnyStep<1, 12>;
