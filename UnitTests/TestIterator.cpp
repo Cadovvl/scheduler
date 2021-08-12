@@ -15,7 +15,6 @@ TEST_CLASS(TestIterator) {
 
  public:
   TEST_METHOD(TestSimpleIterator) {
-
     // "*.9.*/2 10:00:00.000"
     scheduling::Iter iter;
     iter.yearsSequence.emplace(std::make_unique<scheduling::AnyYear>());
@@ -318,7 +317,7 @@ TEST_CLASS(TestIterator) {
                                         scheduling::Time{0, 0, 0, 10}});
   }
 
-    TEST_METHOD(TestWeekdayFilterIterator) {
+  TEST_METHOD(TestWeekdayFilterIterator) {
     // "*.*.* 0-2,4"
     scheduling::Iter iter;
     iter.yearsSequence.emplace(std::make_unique<scheduling::AnyYear>());
@@ -358,6 +357,49 @@ TEST_CLASS(TestIterator) {
                                                  scheduling::Time{0, 0, 0, 0}});
     ++iter;
 
+  }
+
+  
+  TEST_METHOD(TestReverseIterator) {
+    // *.4.6,7 * *:*:*.1,2,3-5,10-20/3
+    scheduling::RIter iter;
+
+    iter.yearsSequence.emplace(std::make_unique<scheduling::RAnyYear>());
+    iter.monthsSequence.emplace(std::make_unique<scheduling::RConst>(4));
+    iter.daysSequence.emplace(std::make_unique<scheduling::RConst>(6));
+    iter.daysSequence.emplace(std::make_unique<scheduling::RConst>(7));
+
+    iter.hoursSequence.emplace(std::make_unique<scheduling::RAnyHour>());
+    iter.minutesSequence.emplace(std::make_unique<scheduling::RAnyMinute>());
+    iter.secondsSequence.emplace(std::make_unique<scheduling::RAnySecond>());
+
+    iter.millisecondsSequence.emplace(std::make_unique<scheduling::RConst>(1));
+    iter.millisecondsSequence.emplace(std::make_unique<scheduling::RConst>(2));
+    iter.millisecondsSequence.emplace(
+        std::make_unique<scheduling::RRange>(3, 5));
+    iter.millisecondsSequence.emplace(
+        std::make_unique<scheduling::RRangeStep>(3, 10, 20));
+
+
+    iter.init(scheduling::DateTime{scheduling::Date{7, 4, 2021},
+                                   scheduling::Time{7, 0, 0, 0}});
+
+    
+    Assert::IsTrue(*iter == scheduling::DateTime{scheduling::Date{7, 4, 2021},
+                                                 scheduling::Time{5, 0, 0, 0}});
+    ++iter;
+
+    Assert::IsTrue(*iter == scheduling::DateTime{scheduling::Date{7, 4, 2021},
+                                                 scheduling::Time{4, 0, 0, 0}});
+    ++iter; // 3
+    ++iter; // 2
+    ++iter; // 1
+    Assert::IsTrue(*iter == scheduling::DateTime{scheduling::Date{7, 4, 2021},
+                                                 scheduling::Time{1, 0, 0, 0}});
+    ++iter; // 0 is not valid millisecond. Prev day
+
+    Assert::IsTrue(*iter == scheduling::DateTime{scheduling::Date{6, 4, 2021},
+                                                 scheduling::Time{19, 59, 59, 23}});
   }
 
  };

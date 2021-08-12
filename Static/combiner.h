@@ -7,7 +7,9 @@
 
 namespace scheduling {
 
-class Combiner final : public ISequence {
+
+template<bool Reversed = false>
+class CombinerBase final : public ISequence {
   typedef std::unique_ptr<ISequence> condition_ptr;
   typedef std::vector<condition_ptr> Conditions;
 
@@ -20,7 +22,7 @@ class Combiner final : public ISequence {
   void makeHeap();
 
  public:
-  Combiner();
+  CombinerBase();
   // todo: move to constructor??
   void emplace(condition_ptr&& ptr);
 
@@ -29,7 +31,10 @@ class Combiner final : public ISequence {
   virtual void reset() override;
   virtual operator bool() const override;
   virtual Unit operator*() const override;
-  virtual Combiner& operator++() override;
+  virtual CombinerBase& operator++() override;
 };
+
+using Combiner = CombinerBase<false>;
+using RCombiner = CombinerBase<true>;
 
 }  // namespace scheduling

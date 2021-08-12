@@ -17,7 +17,6 @@ struct Time {
   Unit hours;
 };
 
-
 struct Date {
   // 1-31
   Unit days;
@@ -26,7 +25,6 @@ struct Date {
   // 2000-2100
   Unit years;
 };
-
 
 struct DateTime {
   Date date;
@@ -37,9 +35,12 @@ bool operator==(const Time& a, const Time& b);
 bool operator==(const Date& a, const Date& b);
 bool operator==(const DateTime& a, const DateTime& b);
 
-class Iter {
+template<bool Reversed>
+class IterBase {
 
-  bool increment_sector(const std::vector<Combiner*>& sector);
+  typedef CombinerBase<Reversed> combiner_t;
+
+  bool increment_sector(const std::vector<combiner_t*>& sector);
 
   bool increment_date();
   bool is_valid_date();
@@ -48,14 +49,14 @@ class Iter {
   bool valid_weekday(Unit weekDay);
 
  public:
-  Combiner yearsSequence;
-  Combiner monthsSequence;
-  Combiner daysSequence;
+  combiner_t yearsSequence;
+  combiner_t monthsSequence;
+  combiner_t daysSequence;
 
-  Combiner hoursSequence;
-  Combiner minutesSequence;
-  Combiner secondsSequence;
-  Combiner millisecondsSequence;
+  combiner_t hoursSequence;
+  combiner_t minutesSequence;
+  combiner_t secondsSequence;
+  combiner_t millisecondsSequence;
 
   bool lastMonth = false;
   bool filterWeek = false;
@@ -70,7 +71,11 @@ class Iter {
   // returns next available value
   DateTime operator*() const;
   // iterates to the next time point
-  Iter& operator++();
+  IterBase<Reversed>& operator++();
 };
+
+
+using Iter = IterBase<false>;
+using RIter = IterBase<true>;
 
 }  // namespace scheduling

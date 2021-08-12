@@ -37,6 +37,26 @@ class Any : public ISequence {
   self_t& operator++() override;
 };
 
+
+template <Unit Begin, Unit End>
+class RAny : public ISequence {
+  typedef RAny<Begin, End> self_t;
+
+ protected:
+  Unit _current;
+
+ public:
+  RAny();
+
+  /*overrides*/
+  void init(const Unit current) override;
+  void reset() override;
+  operator bool() const override final;
+  Unit operator*() const override final;
+  self_t& operator++() override;
+};
+
+
 class Const final : public ISequence {
   const Unit _val;
   bool _active;
@@ -51,6 +71,23 @@ class Const final : public ISequence {
   Unit operator*() const override final;
   Const& operator++() override final;
 };
+
+
+class RConst final : public ISequence {
+  const Unit _val;
+  bool _active;
+
+ public:
+  explicit RConst(const Unit val);
+
+  /*overrides*/
+  void init(const Unit current) override final;
+  void reset() override final;
+  operator bool() const override final;
+  Unit operator*() const override final;
+  RConst& operator++() override final;
+};
+
 
 class Range : public ISequence {
   const Unit _to;
@@ -72,6 +109,27 @@ class Range : public ISequence {
   Range& operator++() override;
 };
 
+
+class RRange : public ISequence {
+ protected:
+  const Unit _from;
+  const Unit _to;
+
+ protected:
+  Unit _current;
+
+ public:
+  RRange(const Unit from, const Unit to);
+
+  /*overrides*/
+  void init(const Unit current) override;
+  void reset() override;
+  operator bool() const override final;
+  Unit operator*() const override final;
+  RRange& operator++() override;
+};
+
+
 template <Unit Begin, Unit End>
 class AnyStep final : public Any<Begin, End> {
   const Unit _step;
@@ -84,6 +142,20 @@ class AnyStep final : public Any<Begin, End> {
   AnyStep& operator++() override final;
 };
 
+
+template <Unit Begin, Unit End>
+class RAnyStep final : public RAny<Begin, End> {
+  const Unit _step;
+
+ public:
+  explicit RAnyStep(Unit step);
+
+  /*overrides*/
+  void init(const Unit current) override final;
+  void reset() override final;
+  RAnyStep& operator++() override final;
+};
+
 class RangeStep final : public Range {
   const Unit _step;
 
@@ -93,6 +165,19 @@ class RangeStep final : public Range {
   /*overrides*/
   void init(const Unit current) override final;
   RangeStep& operator++() override final;
+};
+
+
+class RRangeStep final : public RRange {
+  const Unit _step;
+
+ public:
+  explicit RRangeStep(const Unit step, const Unit from, const Unit to);
+
+  /*overrides*/
+  void init(const Unit current) override final;
+  void reset() override final;
+  RRangeStep& operator++() override final;
 };
 
 using AnyYear = Any<2000, 2100>;
@@ -113,6 +198,23 @@ using AnyStepMinute = AnyStep<0, 59>;
 using AnyStepSecond = AnyStep<0, 59>;
 using AnyStepMillisecond = AnyStep<0, 999>;
 
+using RAnyYear = RAny<2000, 2100>;
+using RAnyMonth = RAny<1, 12>;
+using RAnyDay = RAny<1, 31>;
+using RAnyHour = RAny<0, 23>;
+using RAnyMinute = RAny<0, 59>;
+using RAnySecond = RAny<0, 59>;
+using RAnyMillisecond = RAny<0, 999>;
+
+using RLastDay = RAny<28, 31>;
+
+using RAnyStepYear = RAnyStep<2000, 2100>;
+using RAnyStepMonth = RAnyStep<1, 12>;
+using RAnyStepDay = RAnyStep<1, 31>;
+using RAnyStepHour = RAnyStep<0, 23>;
+using RAnyStepMinute = RAnyStep<0, 59>;
+using RAnyStepSecond = RAnyStep<0, 59>;
+using RAnyStepMillisecond = RAnyStep<0, 999>;
 
 
 }  // namespace scheduling

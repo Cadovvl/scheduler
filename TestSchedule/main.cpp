@@ -9,8 +9,8 @@ constexpr size_t N = 10000;
 constexpr size_t K = 1;
 
 
-
-void check_iter(scheduling::Iter& iter, const scheduling::DateTime& dt) {
+template <typename IterType>
+void check_iter(IterType& iter, const scheduling::DateTime& dt) {
   std::vector<size_t> ns;
 
   ns.reserve(N);
@@ -103,6 +103,77 @@ int main() {
     iter.minutesSequence.emplace(std::make_unique<scheduling::Const>(59));
     iter.secondsSequence.emplace(std::make_unique<scheduling::Const>(59));
     iter.millisecondsSequence.emplace(std::make_unique<scheduling::Const>(999));
+
+    check_iter(iter, scheduling::DateTime{scheduling::Date{01, 01, 2001},
+                                          scheduling::Time{0, 0, 0, 0}});
+    check_iter(iter, scheduling::DateTime{scheduling::Date{05, 05, 2080},
+                                          scheduling::Time{0, 0, 0, 0}});
+  }
+
+  std::cout << std::endl;
+  std::cout << std::endl;
+  std::cout << std::endl;
+
+  {
+    // *.*.1 0:0:0
+    scheduling::RIter iter;
+
+    iter.yearsSequence.emplace(std::make_unique<scheduling::RAnyYear>());
+    iter.monthsSequence.emplace(std::make_unique<scheduling::RAnyMonth>());
+    iter.daysSequence.emplace(std::make_unique<scheduling::RConst>(1));
+
+    iter.hoursSequence.emplace(std::make_unique<scheduling::RConst>(0));
+    iter.minutesSequence.emplace(std::make_unique<scheduling::RConst>(0));
+    iter.secondsSequence.emplace(std::make_unique<scheduling::RConst>(0));
+    iter.millisecondsSequence.emplace(std::make_unique<scheduling::RConst>(0));
+
+    check_iter(iter, scheduling::DateTime{scheduling::Date{01, 01, 2001},
+                                          scheduling::Time{0, 0, 0, 0}});
+    check_iter(iter, scheduling::DateTime{scheduling::Date{05, 05, 2080},
+                                          scheduling::Time{0, 0, 0, 0}});
+  }
+  std::cout << std::endl;
+
+  {
+    // *.4.6,7 * *:*:*.1,2,3-5,10-20/3
+    scheduling::RIter iter;
+
+    iter.yearsSequence.emplace(std::make_unique<scheduling::RAnyYear>());
+    iter.monthsSequence.emplace(std::make_unique<scheduling::RConst>(4));
+    iter.daysSequence.emplace(std::make_unique<scheduling::RConst>(6));
+    iter.daysSequence.emplace(std::make_unique<scheduling::RConst>(7));
+
+    iter.hoursSequence.emplace(std::make_unique<scheduling::RAnyHour>());
+    iter.minutesSequence.emplace(std::make_unique<scheduling::RAnyMinute>());
+    iter.secondsSequence.emplace(std::make_unique<scheduling::RAnySecond>());
+
+    iter.millisecondsSequence.emplace(std::make_unique<scheduling::RConst>(1));
+    iter.millisecondsSequence.emplace(std::make_unique<scheduling::RConst>(2));
+    iter.millisecondsSequence.emplace(
+        std::make_unique<scheduling::RRange>(3, 5));
+    iter.millisecondsSequence.emplace(
+        std::make_unique<scheduling::RRangeStep>(3, 10, 20));
+
+    check_iter(iter, scheduling::DateTime{scheduling::Date{01, 01, 2001},
+                                          scheduling::Time{0, 0, 0, 0}});
+    check_iter(iter, scheduling::DateTime{scheduling::Date{05, 05, 2080},
+                                          scheduling::Time{0, 0, 0, 0}});
+  }
+
+  std::cout << std::endl;
+  {
+    // 2100.12.31 23:59:59.999
+    scheduling::Iter iter;
+
+    iter.yearsSequence.emplace(std::make_unique<scheduling::RConst>(2100));
+    iter.monthsSequence.emplace(std::make_unique<scheduling::RConst>(12));
+    iter.daysSequence.emplace(std::make_unique<scheduling::RConst>(31));
+
+    iter.hoursSequence.emplace(std::make_unique<scheduling::RConst>(23));
+    iter.minutesSequence.emplace(std::make_unique<scheduling::RConst>(59));
+    iter.secondsSequence.emplace(std::make_unique<scheduling::RConst>(59));
+    iter.millisecondsSequence.emplace(
+        std::make_unique<scheduling::RConst>(999));
 
     check_iter(iter, scheduling::DateTime{scheduling::Date{01, 01, 2001},
                                           scheduling::Time{0, 0, 0, 0}});

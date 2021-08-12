@@ -1,15 +1,14 @@
-#include "pch.h"
 #include "framework.h"
+#include "pch.h"
 
 #include <schedule_iterator.h>
 
-#include <tuple>
-
 #include <boost/date_time/gregorian/gregorian_types.hpp>
+#include <tuple>
 
 namespace scheduling {
 
-  bool operator==(const Time& a, const Time& b) {
+bool operator==(const Time& a, const Time& b) {
   return std::tie(a.milliseconds, a.seconds, a.minutes, a.hours) ==
          std::tie(b.milliseconds, b.seconds, b.minutes, b.hours);
 }
@@ -23,15 +22,14 @@ bool operator==(const DateTime& a, const DateTime& b) {
   return a.date == b.date && a.time == b.time;
 }
 
-
-void Iter::init(const DateTime& current) {
+template <bool Reversed>
+void IterBase<Reversed>::init(const DateTime& current) {
   // NB: suppose to use std::chrono::year_month_day
   //     and std::chrono::hh_mm_ss
   // But VS does not support C++20 yet
 
-
   // reset all
-  for (auto* s : std::vector<Combiner*>{
+  for (auto* s : std::vector<combiner_t*>{
            &millisecondsSequence,
            &secondsSequence,
            &minutesSequence,
@@ -43,14 +41,13 @@ void Iter::init(const DateTime& current) {
     s->reset();
   }
 
-  // NB: init block 
+  // NB: init block
   {
     yearsSequence.init(current.date.years);
     if (!yearsSequence) goto end_init_block;
     if (*yearsSequence != current.date.years) goto end_init_block;
 
-
-    for (auto [seq, val] : std::vector<std::pair<Combiner*, Unit>>{
+    for (auto [seq, val] : std::vector<std::pair<combiner_t*, Unit>>{
              {&monthsSequence, current.date.months},
              {&daysSequence, current.date.days}}) {
       seq->init(val);
@@ -60,7 +57,7 @@ void Iter::init(const DateTime& current) {
 
     if (!is_valid_date()) goto end_init_block;
 
-    for (auto [seq, val] : std::vector<std::pair<Combiner*, Unit>>{
+    for (auto [seq, val] : std::vector<std::pair<combiner_t*, Unit>>{
              {&hoursSequence, current.time.hours},
              {&minutesSequence, current.time.minutes},
              {&secondsSequence, current.time.seconds},
@@ -70,11 +67,10 @@ void Iter::init(const DateTime& current) {
       if (**seq != val) goto end_init_block;
     }
   }
-  end_init_block:
-
+end_init_block:
 
   // Fix combiners without valid value (max one at a time)
-  for (auto [seq, prev] : std::vector<std::pair<Combiner*, Combiner*>>{
+  for (auto [seq, prev] : std::vector<std::pair<combiner_t*, combiner_t*>>{
            {&millisecondsSequence, &secondsSequence},
            {&secondsSequence, &minutesSequence},
            {&minutesSequence, &hoursSequence},
@@ -87,17 +83,20 @@ void Iter::init(const DateTime& current) {
       ++(*prev);
     }
   }
-  
+
   // Increment until valid date
   while (bool(*this) && !is_valid_date()) {
     increment_date();
   }
-
 }
 
-Iter::operator bool() const { return yearsSequence; }
+template <bool Reversed>
+IterBase<Reversed>::operator bool() const {
+  return yearsSequence;
+}
 
-DateTime Iter::operator*() const {
+template <bool Reversed>
+DateTime IterBase<Reversed>::operator*() const {
   return DateTime{Date{*daysSequence, *monthsSequence, *yearsSequence},
                   Time{
                       *millisecondsSequence,
@@ -107,8 +106,8 @@ DateTime Iter::operator*() const {
                   }};
 }
 
-
-Iter& Iter::operator++() {
+template <bool Reversed>
+IterBase<Reversed>& IterBase<Reversed>::operator++() {
   // If found next time at the same date - done
   if (increment_time()) {
     return *this;
@@ -124,7 +123,9 @@ Iter& Iter::operator++() {
   return *this;
 }
 
-bool Iter::increment_sector(const std::vector<Combiner*>& sector) {
+template <bool Reversed>
+bool IterBase<Reversed>::increment_sector(
+    const std::vector<combiner_t*>& sector) {
   for (auto* s : sector) {
     ++(*s);
     // if sequence have next value: found next valid value
@@ -138,7 +139,8 @@ bool Iter::increment_sector(const std::vector<Combiner*>& sector) {
   return false;
 }
 
-bool Iter::is_valid_date() {
+template <bool Reversed>
+bool IterBase<Reversed>::is_valid_date() {
   auto end_of_month_day =
       boost::gregorian::gregorian_calendar::end_of_month_day(*yearsSequence,
                                                              *monthsSequence);
@@ -153,14 +155,15 @@ bool Iter::is_valid_date() {
                                             *daysSequence);
   if (filterWeek &&
       !valid_weekday(boost::gregorian::gregorian_calendar::day_of_week(ymd))) {
-    return false; 
+    return false;
   }
 
   return true;
 }
 
-bool Iter::increment_time() {
-  return increment_sector(std::vector<Combiner*>{
+template <bool Reversed>
+bool IterBase<Reversed>::increment_time() {
+  return increment_sector(std::vector<combiner_t*>{
       &millisecondsSequence,
       &secondsSequence,
       &minutesSequence,
@@ -168,7 +171,8 @@ bool Iter::increment_time() {
   });
 }
 
-bool Iter::valid_weekday(Unit weekDay) {
+template <bool Reversed>
+bool IterBase<Reversed>::valid_weekday(Unit weekDay) {
   weekdaySequence.reset();
   do {
     if (*weekdaySequence == weekDay) {
@@ -179,10 +183,11 @@ bool Iter::valid_weekday(Unit weekDay) {
   return false;
 }
 
-bool Iter::increment_date() {
-  if (increment_sector(std::vector<Combiner*>{
-      &daysSequence,
-      &monthsSequence})) {
+template <bool Reversed>
+bool IterBase<Reversed>::increment_date() {
+  if (increment_sector( std::vector<combiner_t*>{
+    &daysSequence, 
+    &monthsSequence})) {
     return true;
   }
 
@@ -190,6 +195,9 @@ bool Iter::increment_date() {
   ++yearsSequence;
   return true;
 }
+
+template class IterBase<true>;
+template class IterBase<false>;
 
 
 }  // namespace scheduling
