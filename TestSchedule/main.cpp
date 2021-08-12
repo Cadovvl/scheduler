@@ -37,7 +37,7 @@ void check_iter(IterType& iter, const scheduling::DateTime& dt) {
 
   std::sort(ns.begin(), ns.end());
 
-  std::cout << " ns; P90: " << ns[90 * N / 100]
+  std::cout << " P90: " << ns[90 * N / 100]
             << " ns; P95: " << ns[95 * N / 100]
             << " ns; P98: " << ns[98 * N / 100] << " ns;" << std::endl;
 }
