@@ -149,6 +149,12 @@ bool Iter::is_valid_date() {
   if (lastMonth && (end_of_month_day != *daysSequence)) {
     return false;
   }
+  boost::gregorian::greg_year_month_day ymd(*yearsSequence, *monthsSequence,
+                                            *daysSequence);
+  if (filterWeek &&
+      !valid_weekday(boost::gregorian::gregorian_calendar::day_of_week(ymd))) {
+    return false; 
+  }
 
   return true;
 }
@@ -160,6 +166,17 @@ bool Iter::increment_time() {
       &minutesSequence,
       &hoursSequence,
   });
+}
+
+bool Iter::valid_weekday(Unit weekDay) {
+  weekdaySequence.reset();
+  do {
+    if (*weekdaySequence == weekDay) {
+      return true;
+    }
+    ++weekdaySequence;
+  } while (weekdaySequence);
+  return false;
 }
 
 bool Iter::increment_date() {

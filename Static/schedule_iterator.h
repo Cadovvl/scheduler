@@ -45,6 +45,8 @@ class Iter {
   bool is_valid_date();
   bool increment_time();
 
+  bool valid_weekday(Unit weekDay);
+
  public:
   Combiner yearsSequence;
   Combiner monthsSequence;
@@ -56,6 +58,9 @@ class Iter {
   Combiner millisecondsSequence;
 
   bool lastMonth = false;
+  bool filterWeek = false;
+
+  Combiner weekdaySequence;
 
   // init with current date
   // Sets the first valid date

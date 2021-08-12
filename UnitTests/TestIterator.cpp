@@ -318,6 +318,48 @@ TEST_CLASS(TestIterator) {
                                         scheduling::Time{0, 0, 0, 10}});
   }
 
+    TEST_METHOD(TestWeekdayFilterIterator) {
+    // "*.*.* 0-2,4"
+    scheduling::Iter iter;
+    iter.yearsSequence.emplace(std::make_unique<scheduling::AnyYear>());
+    iter.monthsSequence.emplace(std::make_unique<scheduling::AnyMonth>());
+    iter.daysSequence.emplace(std::make_unique<scheduling::AnyDay>());
+
+    iter.hoursSequence.emplace(std::make_unique<scheduling::Const>(0));
+    iter.minutesSequence.emplace(std::make_unique<scheduling::Const>(0));
+    iter.secondsSequence.emplace(std::make_unique<scheduling::Const>(0));
+    iter.millisecondsSequence.emplace(std::make_unique<scheduling::Const>(0));
+
+    iter.filterWeek = true;
+    iter.weekdaySequence.emplace(std::make_unique<scheduling::Const>(4));
+    iter.weekdaySequence.emplace(std::make_unique<scheduling::Range>(0,2));
+
+    iter.init(scheduling::DateTime{scheduling::Date{13, 8, 2021},
+                                   scheduling::Time{0, 0, 0, 0}});
+
+    Assert::IsTrue(*iter ==
+                   scheduling::DateTime{scheduling::Date{15, 8, 2021},
+                                        scheduling::Time{0, 0, 0, 0}});
+    ++iter;
+
+    Assert::IsTrue(*iter == scheduling::DateTime{scheduling::Date{16, 8, 2021},
+                                                 scheduling::Time{0, 0, 0, 0}});
+    ++iter;
+
+    Assert::IsTrue(*iter == scheduling::DateTime{scheduling::Date{17, 8, 2021},
+                                                 scheduling::Time{0, 0, 0, 0}});
+    ++iter;
+
+    Assert::IsTrue(*iter == scheduling::DateTime{scheduling::Date{19, 8, 2021},
+                                                 scheduling::Time{0, 0, 0, 0}});
+    ++iter;
+
+    Assert::IsTrue(*iter == scheduling::DateTime{scheduling::Date{22, 8, 2021},
+                                                 scheduling::Time{0, 0, 0, 0}});
+    ++iter;
+
+  }
+
  };
 }
 
