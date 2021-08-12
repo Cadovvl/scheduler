@@ -5,8 +5,8 @@
 #include <algorithm>
 using namespace scheduling;
 
-constexpr size_t N = 10000;
-constexpr size_t K = 1;
+constexpr size_t N = 5000;
+constexpr size_t K = 100;
 
 
 template <typename IterType>
@@ -20,19 +20,15 @@ void check_iter(IterType& iter, const scheduling::DateTime& dt) {
   for (size_t i = 0; i < N; ++i) {
 
     
-    size_t counter = 0;
+    std::chrono::steady_clock::time_point begin =
+        std::chrono::steady_clock::now();
     for (size_t j = 0; j < K; ++j) {
-      std::chrono::steady_clock::time_point begin =
-          std::chrono::steady_clock::now();
-
       iter.init(dt);
-
-      std::chrono::steady_clock::time_point end =
-          std::chrono::steady_clock::now();
-      counter += duration_cast<nanoseconds>(end - begin).count();
     }
 
-    ns.push_back(counter / K);
+    std::chrono::steady_clock::time_point end =
+        std::chrono::steady_clock::now();
+    ns.push_back(duration_cast<nanoseconds>(end - begin).count() / K);
   }
 
   std::sort(ns.begin(), ns.end());
