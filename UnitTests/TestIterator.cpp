@@ -12,27 +12,6 @@ namespace UnitTests {
 typedef std::vector<scheduling::Unit> Units;
 
 TEST_CLASS(TestIterator) {
-  scheduling::Iter::TimePoint date_to_tp(
-      scheduling::Unit ms, scheduling::Unit sec, scheduling::Unit min,
-      scheduling::Unit hour, scheduling::Unit mday, scheduling::Unit mon,
-      scheduling::Unit year){
-
-    
-    std::tm tm = {
-        /* .tm_sec  = */ sec,
-        /* .tm_min  = */ min,
-        /* .tm_hour = */ hour,
-        /* .tm_mday = */ mday,
-        /* .tm_mon  = */ mon - 1,
-        /* .tm_year = */ (year) - 1900,
-    };
-    
-    auto tt = _mkgmtime(&tm);
-
-    return std::chrono::system_clock::from_time_t(tt) +
-       std::chrono::milliseconds{ms};
-  }
-
 
  public:
   TEST_METHOD(TestSimpleIterator) {
@@ -49,53 +28,184 @@ TEST_CLASS(TestIterator) {
     iter.secondsSequence.emplace(std::make_unique<scheduling::Const>(0));
     iter.millisecondsSequence.emplace(std::make_unique<scheduling::Const>(0));
 
-    auto date = date_to_tp(
-        /*ms*/ 0,
-        /*sec*/ 0,
-        /*min*/ 0,
-        /*hour*/ 0,
-        /*mday*/ 28,
-        /*mon*/ 2,
-        /*year*/ 2010);
 
-    auto n1 = date_to_tp(
-        /*ms*/ 0,
-        /*sec*/ 0,
-        /*min*/ 0,
-        /*hour*/ 10,
-        /*mday*/ 29,
-        /*mon*/ 9,
-        /*year*/ 2010);
-
-    auto n2 = date_to_tp(
-        /*ms*/ 0,
-        /*sec*/ 0,
-        /*min*/ 0,
-        /*hour*/ 10,
-        /*mday*/ 31,
-        /*mon*/ 9,
-        /*year*/ 2010);
-
-    auto n3 = date_to_tp(
-        /*ms*/ 0,
-        /*sec*/ 0,
-        /*min*/ 0,
-        /*hour*/ 10,
-        /*mday*/ 1,
-        /*mon*/ 9,
-        /*year*/ 2011);
+    iter.init(scheduling::DateTime{scheduling::Date{28, 2, 2010},
+                                   scheduling::Time{0, 0, 0, 0}});
 
 
-    iter.init(date);
-
-
-    Assert::IsTrue(*iter == n1);
+    Assert::IsTrue(*iter ==
+                   scheduling::DateTime{scheduling::Date{29, 9, 2010},
+                                        scheduling::Time{0, 0, 0, 10}});
     ++iter;
-    Assert::IsTrue(*iter == n2);
+    Assert::IsTrue(*iter ==
+                   scheduling::DateTime{scheduling::Date{1, 9, 2011},
+                                        scheduling::Time{0, 0, 0, 10}});
     ++iter;
-    Assert::IsTrue(*iter == n3);
-
+    Assert::IsTrue(*iter ==
+                   scheduling::DateTime{scheduling::Date{3, 9, 2011},
+                                        scheduling::Time{0, 0, 0, 10}});
   }
+
+  
+  TEST_METHOD(TestMonthsLimit) {
+    // "*.*.28-31 10:00:00.000"
+    scheduling::Iter iter;
+    iter.yearsSequence.emplace(std::make_unique<scheduling::AnyYear>());
+    iter.monthsSequence.emplace(std::make_unique<scheduling::AnyMonth>());
+    iter.daysSequence.emplace(std::make_unique<scheduling::Range>(28, 31));
+
+    iter.hoursSequence.emplace(std::make_unique<scheduling::Const>(10));
+    iter.minutesSequence.emplace(std::make_unique<scheduling::Const>(0));
+    iter.secondsSequence.emplace(std::make_unique<scheduling::Const>(0));
+    iter.millisecondsSequence.emplace(std::make_unique<scheduling::Const>(0));
+
+    // 2013
+    iter.init(scheduling::DateTime{scheduling::Date{1, 1, 2013},
+                                   scheduling::Time{0, 0, 0, 0}});
+
+    Assert::IsTrue(*iter ==
+                   scheduling::DateTime{scheduling::Date{28, 1, 2013},
+                                        scheduling::Time{0, 0, 0, 10}});
+    ++iter;
+
+    Assert::IsTrue(*iter ==
+                   scheduling::DateTime{scheduling::Date{29, 1, 2013},
+                                        scheduling::Time{0, 0, 0, 10}});
+    ++iter;
+
+    Assert::IsTrue(*iter ==
+                   scheduling::DateTime{scheduling::Date{30, 1, 2013},
+                                        scheduling::Time{0, 0, 0, 10}});
+    ++iter;
+
+    Assert::IsTrue(*iter ==
+                   scheduling::DateTime{scheduling::Date{31, 1, 2013},
+                                        scheduling::Time{0, 0, 0, 10}});
+    ++iter;
+
+    Assert::IsTrue(*iter ==
+                   scheduling::DateTime{scheduling::Date{28, 2, 2013},
+                                        scheduling::Time{0, 0, 0, 10}});
+    ++iter;
+
+    Assert::IsTrue(*iter ==
+                   scheduling::DateTime{scheduling::Date{28, 3, 2013},
+                                        scheduling::Time{0, 0, 0, 10}});
+    ++iter;
+
+    // 2000
+    iter.init(scheduling::DateTime{scheduling::Date{1, 1, 2000},
+                                   scheduling::Time{0, 0, 0, 0}});
+
+    Assert::IsTrue(*iter ==
+                   scheduling::DateTime{scheduling::Date{28, 1, 2000},
+                                        scheduling::Time{0, 0, 0, 10}});
+    ++iter;
+
+    Assert::IsTrue(*iter ==
+                   scheduling::DateTime{scheduling::Date{29, 1, 2000},
+                                        scheduling::Time{0, 0, 0, 10}});
+    ++iter;
+
+    Assert::IsTrue(*iter ==
+                   scheduling::DateTime{scheduling::Date{30, 1, 2000},
+                                        scheduling::Time{0, 0, 0, 10}});
+    ++iter;
+
+    Assert::IsTrue(*iter ==
+                   scheduling::DateTime{scheduling::Date{31, 1, 2000},
+                                        scheduling::Time{0, 0, 0, 10}});
+    ++iter;
+
+    Assert::IsTrue(*iter ==
+                   scheduling::DateTime{scheduling::Date{28, 2, 2000},
+                                        scheduling::Time{0, 0, 0, 10}});
+    ++iter;
+    // NB: 2000 % 1000 == 0
+    Assert::IsTrue(*iter ==
+                   scheduling::DateTime{scheduling::Date{29, 2, 2000},
+                                        scheduling::Time{0, 0, 0, 10}});
+    ++iter;
+
+    Assert::IsTrue(*iter ==
+                   scheduling::DateTime{scheduling::Date{28, 3, 2000},
+                                        scheduling::Time{0, 0, 0, 10}});
+    ++iter;
+
+    // 2004
+    iter.init(scheduling::DateTime{scheduling::Date{1, 1, 2004},
+                                   scheduling::Time{0, 0, 0, 0}});
+
+    Assert::IsTrue(*iter ==
+                   scheduling::DateTime{scheduling::Date{28, 1, 2004},
+                                        scheduling::Time{0, 0, 0, 10}});
+    ++iter;
+
+    Assert::IsTrue(*iter ==
+                   scheduling::DateTime{scheduling::Date{29, 1, 2004},
+                                        scheduling::Time{0, 0, 0, 10}});
+    ++iter;
+
+    Assert::IsTrue(*iter ==
+                   scheduling::DateTime{scheduling::Date{30, 1, 2004},
+                                        scheduling::Time{0, 0, 0, 10}});
+    ++iter;
+
+    Assert::IsTrue(*iter ==
+                   scheduling::DateTime{scheduling::Date{31, 1, 2004},
+                                        scheduling::Time{0, 0, 0, 10}});
+    ++iter;
+
+    Assert::IsTrue(*iter ==
+                   scheduling::DateTime{scheduling::Date{28, 2, 2004},
+                                        scheduling::Time{0, 0, 0, 10}});
+    ++iter;
+
+    Assert::IsTrue(*iter ==
+                   scheduling::DateTime{scheduling::Date{29, 2, 2004},
+                                        scheduling::Time{0, 0, 0, 10}});
+    ++iter;
+
+    Assert::IsTrue(*iter ==
+                   scheduling::DateTime{scheduling::Date{28, 3, 2004},
+                                        scheduling::Time{0, 0, 0, 10}});
+    ++iter;
+
+    // 04/2004
+    iter.init(scheduling::DateTime{scheduling::Date{1, 4, 2004},
+                                   scheduling::Time{0, 0, 0, 0}});
+
+    Assert::IsTrue(*iter ==
+                   scheduling::DateTime{scheduling::Date{28, 4, 2004},
+                                        scheduling::Time{0, 0, 0, 10}});
+    ++iter;
+
+    Assert::IsTrue(*iter ==
+                   scheduling::DateTime{scheduling::Date{29, 4, 2004},
+                                        scheduling::Time{0, 0, 0, 10}});
+    ++iter;
+
+    Assert::IsTrue(*iter ==
+                   scheduling::DateTime{scheduling::Date{30, 4, 2004},
+                                        scheduling::Time{0, 0, 0, 10}});
+    ++iter;
+
+    Assert::IsTrue(*iter ==
+                   scheduling::DateTime{scheduling::Date{28, 5, 2004},
+                                        scheduling::Time{0, 0, 0, 10}});
+    ++iter;
+
+    Assert::IsTrue(*iter ==
+                   scheduling::DateTime{scheduling::Date{29, 5, 2004},
+                                        scheduling::Time{0, 0, 0, 10}});
+    ++iter;
+
+    Assert::IsTrue(*iter ==
+                   scheduling::DateTime{scheduling::Date{30, 5, 2004},
+                                        scheduling::Time{0, 0, 0, 10}});
+    ++iter;
+  }
+
  };
 }
 
